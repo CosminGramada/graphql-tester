@@ -6,7 +6,8 @@ export function tester({
     server,
     method = 'POST',
     contentType = 'application/graphql',
-    authorization = null
+    authorization = null,
+    customHeaders = null
 }) {
     return (query, requestOptions) => {
         return new Promise((resolve, reject) => {
@@ -29,24 +30,30 @@ export function tester({
                     url
                 });
             }
-        }).then(({url, server}) => {
+        }).then(({ url, server }) => {
             return new Promise((resolve, reject) => {
                 let headers = {
                     'Content-Type': contentType,
                 };
                 if (authorization !== null) headers['Authorization'] = authorization;
+                if (customHeaders !== null) {
+                    var ch;
+                    for (ch in customHeaders) {
+                        headers[ch] = customHeaders[ch];
+                    }
+                }
                 let options = { method, uri: url, headers, body: query };
                 options = Object.assign(options, requestOptions);
                 request(options, (error, message, body) => {
-                    if (server && typeof(server.shutdown) === 'function') {
+                    if (server && typeof (server.shutdown) === 'function') {
                         server.shutdown();
                     }
-                    
+
                     if (error) {
                         reject(error);
                     } else {
                         const result = JSON.parse(body);
-                        
+
                         resolve({
                             raw: body,
                             data: result.data,
